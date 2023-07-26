@@ -24,36 +24,39 @@ import {
   f7,
   useStore,
 } from "framework7-react";
-import store from "../store";
 
-import { Configuration, OpenAIApi } from "openai";
+const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY;
+
+// import { Configuration, OpenAIApi } from "openai";
 
 export default () => {
-  // set apiKey
-  // const configuration = new Configuration({
-  //   apiKey: API_KEY,
-  // });
-  const replyStore = useStore("replyStore");
-
+  // setup params
   const [typingMessage, setTypingMessage] = useState(null);
   const [messageText, setMessageText] = useState("");
-  const [messagesData, setMessagesData] = useState([
-    {
-      type: "sent",
-      text: "How are you?",
-    },
-    {
-      name: "ChatGPT",
-      type: "received",
-      text: "Hi, I am good!",
-    },
-  ]);
+  // const [messagesData, setMessagesData] = useState([
+  //   {
+  //     type: "sent",
+  //     text: "How are you?",
+  //   },
+  //   {
+  //     name: "ChatGPT",
+  //     type: "received",
+  //     text: "Hi, I am good!",
+  //   },
+  // ]);
+  const messagesData = useStore("messagesData");
 
   useEffect(() => {
     f7ready(() => {
       //
     });
   }, []);
+
+  // f7 store
+
+  const setMessagesData = (data) => {
+    f7.store.dispatch("setMessagesData", data);
+  };
 
   const isFirstMessage = (message, index) => {
     const previousMessage = messagesData[index - 1];
@@ -91,39 +94,90 @@ export default () => {
     return false;
   };
 
-  const sendMessage = () => {
-    const text = messageText.replace(/\n/g, "<br>").trim();
-    const messagesToSend = [];
+  const sendMessage = async () => {
+    // const text = messageText.replace(/\n/g, "<br>").trim();
+    const text = messageText.trim();
+    // const messagesToSend = [];
 
-    if (text.length) {
-      messagesToSend.push({
-        type: "sent",
-        text,
-      });
-    }
-    if (messagesToSend.length === 0) {
-      return;
-    }
+    if (text.length === 0) return;
 
-    setMessagesData([...messagesData, ...messagesToSend]);
+    // {
+    //   messagesToSend.push({
+    //     type: "sent",
+    //     text: text,
+    //   });
+    // }
+    // if (messagesToSend.length === 0) {
+    //   return;
+    // }
+
+    const newMessageData = [...messagesData];
+    newMessageData.push({
+      type: "sent",
+      text: text,
+    });
+
+    // setMessagesData([...messagesData, ...messagesToSend]);
+
+    // new set with useStore
+    setMessagesData(newMessageData);
     setMessageText("");
 
     // show loading indicator
     setTypingMessage(true);
 
-    // chatGPT API
-    setTimeout(() => {
-      setMessagesData((previousMessage) => {
-        return [
-          ...previousMessage,
-          {
-            type: "received",
-            text: "this is some content text",
-          },
-        ];
+    // chatGPT demo
+    // setTimeout(() => {
+    //   setMessagesData((previousMessage) => {
+    //     return [
+    //       ...previousMessage,
+    //       {
+    //         type: "received",
+    //         text: "this is some content text",
+    //       },
+    //     ];
+    //   });
+    //   setTypingMessage(false);
+    // }, 3000);
+    // end demo
+
+    //
+    // chatGPT API online
+    const response = await fetch(`https://api.openai.com/v1/chat/completions`, {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        temperature: 0.7,
+        messages: newMessageData
+          .map((message) => {
+            return {
+              role: message.type === "sent" ? "user" : "assistant",
+              content: message.text,
+            };
+          })
+          .slice(-4), // TODO
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.choices.length > 0) {
+      const replyFromChatGPT = data.choices[0].message.content;
+
+      newMessageData.push({
+        type: "received",
+        text: replyFromChatGPT,
       });
-      setTypingMessage(false);
-    }, 3000);
+
+      setMessagesData(newMessageData);
+    }
+
+    // Stop loading indicator
+    setTypingMessage(false);
   };
 
   return (
@@ -133,7 +187,9 @@ export default () => {
           Back
         </Link>
 
-        <Link slot="right">Link</Link>
+        <Link slot="right" href="/settings/">
+          Settings
+        </Link>
       </Navbar>
 
       <Messagebar

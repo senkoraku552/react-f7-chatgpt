@@ -2,24 +2,28 @@ import { createStore } from "framework7/lite";
 
 // Define States
 let state = {
-  count: 0,
+  messagesData: [],
+
+  temperature: 0.7,
 };
 
 // Define Getters
 const getters = {
-  count({ state }) {
-    return state.count;
+  messagesData({ state }) {
+    return state.messagesData;
   },
-  // save reply for chatAPI callback
-  replyStore({ state }) {
-    return state.replyStore;
+  temperature({ state }) {
+    return state.temperature;
   },
 };
 
 // Define Actions
 const actions = {
-  setCount({ state }, newValue) {
-    state.count = newValue;
+  setMessagesData({ state }, newValue) {
+    state.messagesData = newValue;
+  },
+  setTemperature({ state }, newValue) {
+    state.temperature = newValue;
   },
 };
 

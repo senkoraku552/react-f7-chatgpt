@@ -10,7 +10,7 @@ import {
 } from "framework7-react";
 
 const HomePage = ({ f7router }) => {
-  const count = useStore("count");
+  // const count = useStore("count");
 
   return (
     <>
@@ -71,7 +71,11 @@ const HomePage = ({ f7router }) => {
         <Block>
           <p>Go to Message Page</p>
           <Button fill href="/message/">
-            Click to Meesage Page
+            Goto Meesage Page
+          </Button>
+          <p>Custom Settings</p>
+          <Button fill href="/settings/">
+            My Settings
           </Button>
         </Block>
       </Page>
