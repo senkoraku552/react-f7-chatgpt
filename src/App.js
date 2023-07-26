@@ -5,6 +5,9 @@ import AboutPage from "./pages/AboutPage";
 import ArticlePage from "./pages/ArticlePage";
 import ShowArticlePage from "./pages/ShowArticlePage";
 
+import store, { Store } from "./store";
+import MessagePage from "./pages/MessagePage";
+
 const f7params = {
   name: "My App",
   view: {
@@ -28,12 +31,16 @@ const f7params = {
       path: "/show/",
       component: ShowArticlePage,
     },
+    {
+      path: "/message/",
+      component: MessagePage,
+    },
   ],
 };
 
 export default () => (
   // Main Framework7 App component where we pass Framework7 params
-  <App theme="auto" {...f7params}>
+  <App store={store} theme="auto" {...f7params}>
     {/* Your main view, should have "main" prop */}
     <View main url="/" />
   </App>
