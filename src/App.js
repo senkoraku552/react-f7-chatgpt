@@ -8,6 +8,7 @@ import ShowArticlePage from "./pages/ShowArticlePage";
 import store, { Store } from "./store";
 import MessagePage from "./pages/MessagePage";
 import SettingPage from "./pages/SettingPage";
+import ConversationPage from "./pages/ConversationPage";
 
 const f7params = {
   name: "My App",
@@ -33,12 +34,16 @@ const f7params = {
       component: ShowArticlePage,
     },
     {
-      path: "/message/",
+      path: "/message/:id/",
       component: MessagePage,
     },
     {
-      path: "/settings/",
+      path: "/settings/:id/",
       component: SettingPage,
+    },
+    {
+      path: "/conversation/",
+      component: ConversationPage,
     },
   ],
 };

@@ -5,10 +5,10 @@
 // Method: POST
 // Header:
 // Authorization: Bearer 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
-// Content-type: application/json
+// context-type: application/json
 // JSON Body
 // model: gpt-3.5-turbo
-// messages: [{ role: "system/assistant/user", content: "..." }]
+// messages: [{ role: "system/assistant/user", context: "..." }]
 // temperature: 0.7
 
 import React, { useEffect, useRef, useState } from "react";
@@ -29,10 +29,11 @@ const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY;
 
 // import { Configuration, OpenAIApi } from "openai";
 
-export default () => {
-  // setup params
+export default ({ id }) => {
+  // setup params defalut value
   const [typingMessage, setTypingMessage] = useState(null);
   const [messageText, setMessageText] = useState("");
+
   // const [messagesData, setMessagesData] = useState([
   //   {
   //     type: "sent",
@@ -44,16 +45,29 @@ export default () => {
   //     text: "Hi, I am good!",
   //   },
   // ]);
+
+  // read params from f7 store
   const messagesData = useStore("messagesData");
+
+  // read conversationsData
+  const conversationsData = useStore("conversationsData");
+
+  const [conversation, setConversation] = useState(null);
 
   useEffect(() => {
     f7ready(() => {
       //
+      const thisConversation = conversationsData.find((item) => {
+        return item.id === id;
+      });
+
+      if (thisConversation) {
+        setConversation(thisConversation);
+      }
     });
   }, []);
 
-  // f7 store
-
+  // set f7 store
   const setMessagesData = (data) => {
     f7.store.dispatch("setMessagesData", data);
   };
@@ -133,40 +147,43 @@ export default () => {
     //       ...previousMessage,
     //       {
     //         type: "received",
-    //         text: "this is some content text",
+    //         text: "this is some context text",
     //       },
     //     ];
     //   });
     //   setTypingMessage(false);
     // }, 3000);
-    // end demo
+    // end demo **//
 
-    //
+    /* */
     // chatGPT API online
-    const response = await fetch(`https://api.openai.com/v1/chat/completions`, {
-      method: "post",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        temperature: 0.7,
-        messages: newMessageData
-          .map((message) => {
-            return {
-              role: message.type === "sent" ? "user" : "assistant",
-              content: message.text,
-            };
-          })
-          .slice(-4), // TODO
-      }),
-    });
+    const response = await fetch(
+      `https://cm633.fluentgpt.app/openai/v1/chat/completions`,
+      {
+        method: "post",
+        headers: {
+          "context-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          temperature: conversation?.temperature,
+          messages: newMessageData
+            .map((message) => {
+              return {
+                role: message.type === "sent" ? "user" : "assistant",
+                context: message.text,
+              };
+            })
+            .slice(conversation?.context * -1),
+        }),
+      }
+    );
 
     const data = await response.json();
 
     if (data.choices.length > 0) {
-      const replyFromChatGPT = data.choices[0].message.content;
+      const replyFromChatGPT = data.choices[0].message.context;
 
       newMessageData.push({
         type: "received",
@@ -187,7 +204,7 @@ export default () => {
           Back
         </Link>
 
-        <Link slot="right" href="/settings/">
+        <Link slot="right" href={`/setting/${id}/`}>
           Settings
         </Link>
       </Navbar>
@@ -202,7 +219,10 @@ export default () => {
       </Messagebar>
 
       <Messages>
-        <MessagesTitle>Conversation</MessagesTitle>
+        <MessagesTitle>
+          ID: {id}, Temperature: {conversation?.temperature}, Context:{" "}
+          {conversation?.context}
+        </MessagesTitle>
 
         {messagesData.map((message, index) => (
           <Message
